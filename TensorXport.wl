@@ -37,18 +37,29 @@ Which[
 	Head[index]===Symbol,
 		Return["^"<>ToString[index]],
 	True,
-		Return[Throw["Index position not identified"]]
+		Return[Throw["Index position not identified", index]]
 ]
 ];
 
 Clear[TensorToString];
 TensorToString[bundle_] := Module[
-	{components, indices, pertSymb, indicesStr, pertStr, layers, indicesCD, indicesCDStr,indicesCDSymb, pertTensor, CDlayers},
+	{components, indices, pertSymb, indicesStr, pertStr, layers, indicesCD, 
+	indicesCDStr,indicesCDSymb, pertTensor, CDlayers, beautyTensors},
 	pertTensor = bundle["base"];
 	CDlayers = bundle["CDlayers"];
-	pertSymb = Head[pertTensor]/.{RicciCD->R, RicciScalarCD->Ricciscalar};
-	pertStr = ToString[pertSymb];
-	components = Apply[List, pertTensor];
+	beautyTensors = {RicciCD->R, RicciScalarCD->Ricciscalar, RiemannCD->R,
+	RicciScalarCD[]->Ricciscalar};
+	Which[
+		Head[pertTensor]===Power,
+			pertSymb = InputForm[pertTensor/.beautyTensors];
+			components = {},
+		Head[Head[pertTensor]]===Symbol,
+			pertSymb = Head[pertTensor];
+			components = Apply[List, pertTensor];
+		];
+		
+	pertStr = ToString[pertSymb/.beautyTensors];
+	
 	If[components==={},
 		Return[pertStr]
 	];
@@ -102,7 +113,7 @@ FromTimesToList[term_] := Module[{},
 	Return[{term}];
 ];
 
-AddPlus[term_String]:= Which[
+AddPlusString[term_String]:= Which[
 	StringContainsQ[term,"-"],
 		term,
 	StringContainsQ[term,"+"],
@@ -111,12 +122,12 @@ AddPlus[term_String]:= Which[
 		"+"<>term
 ];
 
-xTensorToGRtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
-	termsAsLists = Map[FromTimesToList,FromSumToList[xTensorTerms]];
+Togrtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
+	termsAsLists = Map[FromTimesToList,ScreenDollarIndices[FromSumToList[xTensorTerms]]];
 	allterms = {};
-	Do[simpSingleList = ScreenDollarIndices[singleList];
+	Do[simpSingleList = singleList;
 		term = StringRiffle[Map[ConvertListTermToString, simpSingleList],"*"];
-		term = AddPlus[term];
+		term = AddPlusString[term];
 		AppendTo[allterms, term]
 	,{singleList, termsAsLists}];
 	Return[StringRiffle[allterms, " "]]
