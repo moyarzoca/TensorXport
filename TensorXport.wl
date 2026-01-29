@@ -122,7 +122,7 @@ AddPlusString[term_String]:= Which[
 		"+"<>term
 ];
 
-Togrtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
+ToGRtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
 	termsAsLists = Map[FromTimesToList,ScreenDollarIndices[FromSumToList[xTensorTerms]]];
 	allterms = {};
 	Do[simpSingleList = singleList;
