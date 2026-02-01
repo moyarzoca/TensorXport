@@ -133,4 +133,89 @@ ToGRtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterm
 	Return[StringRiffle[allterms, " "]]
 ];
 
+"""
+-----------------------------------------
+
+	Integration by parts
+
+-----------------------------------------
+"""
+
+ContainsCDQ[expr_] := !FreeQ[expr, CD];
+PluralCDQ[term_] := Module[{factorsWithCD},
+	factorsWithCD = Select[FromTimesToList[term], ContainsCDQ];
+	If[Length[factorsWithCD]>1,
+		Return[True],
+			Return[False]
+	];
+];
+
+CountCDdegree[factor_Association] :=  Module[{},
+	If[Head[factor["base"]]===hh,
+		Return[Length[factor["CDlayers"]]],
+			Return[0]
+	]];
+
+ChoosePertFactor[CDdegree_List] := Module[{CDdegreeOnlyPert},
+	CDdegreeOnlyPert = DeleteCases[CDdegree, 0];
+	First@FirstPosition[CDdegree,
+	  Min[CDdegreeOnlyPert]
+]];
+
+GetLayers[CDlayers_] := Reverse[Sort[Keys[CDlayers]]];
+
+ActCDLayers[expr_, CDlayers_] := Module[{layers, exprLoop},
+	layers = GetLayers[CDlayers];
+	exprLoop = expr;
+	Do[
+		exprLoop = CD[CDlayers[indx]][exprLoop]
+	, {indx, layers}];
+	Return[exprLoop]
 ]
+
+IntByPartSingle[term_] := Module[
+	{DecompositionCD, factorList, CDdegrees, indxToInt, BundleToInt, layers,
+	CDlayers, rest, base},
+	If[Not[PluralCDQ[term]],
+		Return[<|"bdy_term" -> 0, "bulk_term" -> term|>]
+	];
+	factorList = FromTimesToList[term];
+	DecompositionCD = Map[ExtractAllCD, factorList];
+	CDdegrees = Map[CountCDdegree, DecompositionCD];
+	indxToInt = ChoosePertFactor[CDdegrees];
+	rest = Apply[Times, Delete[factorList, indxToInt]];
+	BundleToInt = DecompositionCD[[indxToInt]];
+	CDlayers = BundleToInt["CDlayers"];
+	base = BundleToInt["base"];
+	layers = GetLayers[CDlayers];
+	CDlayersReduced = CDlayers; 
+	restIter = rest;
+	boundaryterms = {};
+	Do[
+		CDlayersReduced = KeyDrop[CDlayersReduced, indx]; 
+		PertIter = ActCDLayers[base, CDlayersReduced];
+		state = <|
+			"bdy_term" -> Inactive[CD][CDlayers[indx]][restIter*PertIter],
+			"bulk" -> -Inactive[CD][CDlayers[indx]][restIter]*PertIter
+		|>;
+		AppendTo[boundaryterms, state["bdy_term"]];
+		restIter = -Inactive[CD][CDlayers[indx]][restIter];
+	,{indx, layers}];
+	Return[
+		<|"bdy_term" -> Apply[Plus, boundaryterms],
+		  "bulk_term" -> state["bulk"]|>
+		]
+]
+
+PertCanonicalDerivatives[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
+	terms = ScreenDollarIndices[FromSumToList[xTensorTerms]];
+	allterms = {};
+	Do[ AppendTo[allterms, IntByPartSingle[term]]
+	,{term, terms}];
+	Return[
+	<|
+  	"bdy_term"  -> Total[allterms[[All, "bdy_term"]]],
+  	"bulk_term" -> Activate[Total[allterms[[All, "bulk_term"]]]]
+	|>]
+];
+
