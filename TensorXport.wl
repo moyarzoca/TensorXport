@@ -99,10 +99,10 @@ FromSumToList[Terms_]:=Module[{terms, listTerms},
 	Which[
 	Head[terms]===Plus,
 		Return[Apply[List, terms]],
-	Head[terms]===Times,
+	Or[(Head[terms]===Times), (Head[Head[terms]]===Inactive[CD])],
 		Return[{terms}]
 	];
-	Throw["Error in converting Sum into list"]
+	Throw["Error in converting Sum To List", Terms];
 ];
 
 FromTimesToList[term_] := Module[{},
@@ -125,8 +125,8 @@ AddPlusString[term_String]:= Which[
 ToGRtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
 	termsAsLists = Map[FromTimesToList,ScreenDollarIndices[FromSumToList[xTensorTerms]]];
 	allterms = {};
-	Do[simpSingleList = singleList;
-		term = StringRiffle[Map[ConvertListTermToString, simpSingleList],"*"];
+	Do[
+		term = StringRiffle[Map[ConvertListTermToString, singleList],"*"];
 		term = AddPlusString[term];
 		AppendTo[allterms, term]
 	,{singleList, termsAsLists}];
