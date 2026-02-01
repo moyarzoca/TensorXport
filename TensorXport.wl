@@ -256,3 +256,5 @@ IntegrateByParts[BoundaryObjects_][xTensorTerms_] := Module[
   	"bulk_term" -> Activate[Total[allterms[[All, "bulk_term"]]]]
 	|>]
 ];
+
+ExtractNormalVector[BoundaryObjects_, index_][bdyTerm_] := ContractMetric[VarD[BoundaryObjects["normal"][-index], CD][bdyTerm]];
