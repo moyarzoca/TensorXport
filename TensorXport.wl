@@ -11,8 +11,8 @@ IsCD[expr_] := MatchQ[expr, _[__][__] /; Head[Head[expr]] === CD];
 
 IsNotCD[expr_] := Not[IsCD[expr]]
 
-ExtractAllCD[expr_] := Module[{current = expr, acc = {}, indices = <||>, i=1},
-	If[IsNotCD[expr],
+ExtractAllCD[factor_] := Module[{current = factor, acc = {}, indices = <||>, i=1},
+	If[IsNotCD[factor],
 		Return[<|"base"->expr, "CDlayers"-><||>|>]
 	 ];
 	While[IsCD[current],
@@ -131,4 +131,6 @@ ToGRtensor[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterm
 		AppendTo[allterms, term]
 	,{singleList, termsAsLists}];
 	Return[StringRiffle[allterms, " "]]
+];
+
 ]
