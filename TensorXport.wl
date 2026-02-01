@@ -174,7 +174,7 @@ ActCDLayers[expr_, CDlayers_] := Module[{layers, exprLoop},
 ]
 
 IntByPartSingle[term_] := Module[
-	{DecompositionCD, factorList, CDdegrees, indxToInt, BundleToInt, layers,
+	{DecompositionCD, factorList, CDdegrees, indxToInt, BundleToInt, layersFromOutside,
 	CDlayers, rest, base},
 	If[Not[PluralCDQ[term]],
 		Return[<|"bdy_term" -> 0, "bulk_term" -> term|>]
@@ -187,7 +187,7 @@ IntByPartSingle[term_] := Module[
 	BundleToInt = DecompositionCD[[indxToInt]];
 	CDlayers = BundleToInt["CDlayers"];
 	base = BundleToInt["base"];
-	layers = GetLayers[CDlayers];
+	layersFromOutside = Sort[Keys[CDlayers]];
 	CDlayersReduced = CDlayers; 
 	restIter = rest;
 	boundaryterms = {};
@@ -200,7 +200,7 @@ IntByPartSingle[term_] := Module[
 		|>;
 		AppendTo[boundaryterms, state["bdy_term"]];
 		restIter = -Inactive[CD][CDlayers[indx]][restIter];
-	,{indx, layers}];
+	,{indx, layersFromOutside}];
 	Return[
 		<|"bdy_term" -> Apply[Plus, boundaryterms],
 		  "bulk_term" -> state["bulk"]|>
