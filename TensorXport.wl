@@ -207,6 +207,44 @@ IntByPartSingle[term_] := Module[
 		]
 ]
 
+
+
+PrepareBdyList[bdyTerms_] := Module[{nonzeroBdyTerms}, 
+	nonzeroBdyTerms = Select[bdyTerms, #=!=0&];
+	Return[
+		Flatten[Map[FromSumToList, nonzeroBdyTerms]]
+	];
+];
+
+ExtractSingleDerivative[term_, index_] := Module[
+	{vector, indexVecBare, mapIndex, indexCD, ShouldBeCD},
+
+	ShouldBeCD = Head[Head[term]];
+	If[(ShouldBeCD =!= CD) && (ShouldBeCD =!= Inactive[CD]),
+		Throw["Error: boundary term has not CD factorized", term]
+	
+	];
+	vector = First[Apply[List, term]];
+	indexCD = First[Apply[List, Head[term]]];
+	If[Head[indexCD]===Times,
+		indexVecBare = -indexCD;
+		mapIndex = {indexVecBare-> index},
+			indexVecBare = indexCD;
+			mapIndex = {indexVecBare -> -index} 
+	];
+	Return[vector/.mapIndex]
+]; 
+
+
+ExtractBdyDerivative[bdyTerms_List, norm_, a_] := Module[{newIndex, bdytermsSimp, allbdy},
+	newIndex = a;
+	bdytermsSimp = PrepareBdyList[bdyTerms];
+	allbdy = Total[Map[ExtractSingleDerivative[#, newIndex]&, bdytermsSimp]];
+	Activate[allbdy]*norm[-newIndex]
+];
+
+SetNormalVector[norm_, M_] := Module[{},BoundaryObjects = <|"normal"->norm, "index"->DummyIn[TangentM]|>;];
+
 PertCanonicalDerivatives[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
 	terms = ScreenDollarIndices[FromSumToList[xTensorTerms]];
 	allterms = {};
@@ -214,8 +252,10 @@ PertCanonicalDerivatives[xTensorTerms_] := Module[{termsAsLists, simpSingleList,
 	,{term, terms}];
 	Return[
 	<|
-  	"bdy_term"  -> Total[allterms[[All, "bdy_term"]]],
+  	"bdy_term"  -> ExtractBdyDerivative[allterms[[All, "bdy_term"]], 
+  										BoundaryObjects["normal"], 
+  										BoundaryObjects["index"]
+  										],
   	"bulk_term" -> Activate[Total[allterms[[All, "bulk_term"]]]]
 	|>]
 ];
-
