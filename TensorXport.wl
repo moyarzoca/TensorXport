@@ -13,7 +13,7 @@ IsNotCD[expr_] := Not[IsCD[expr]]
 
 ExtractAllCD[factor_] := Module[{current = factor, acc = {}, indices = <||>, i=1},
 	If[IsNotCD[factor],
-		Return[<|"base"->expr, "CDlayers"-><||>|>]
+		Return[<|"base"->factor, "CDlayers"-><||>|>]
 	 ];
 	While[IsCD[current],
 	    With[{state = ExtractSingleCD[current]},
