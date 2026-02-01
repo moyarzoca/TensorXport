@@ -216,40 +216,37 @@ PrepareBdyList[bdyTerms_] := Module[{nonzeroBdyTerms},
 	];
 ];
 
-ExtractSingleDerivative[term_, index_] := Module[
+ExtractSingleDerivative[term_,normal_, index_] := Module[
 	{vector, indexVecBare, mapIndex, indexCD, ShouldBeCD},
 
 	ShouldBeCD = Head[Head[term]];
 	If[(ShouldBeCD =!= CD) && (ShouldBeCD =!= Inactive[CD]),
 		Throw["Error: boundary term has not CD factorized", term]
-	
 	];
 	vector = First[Apply[List, term]];
 	indexCD = First[Apply[List, Head[term]]];
-	If[Head[indexCD]===Times,
-		indexVecBare = -indexCD;
-		mapIndex = {indexVecBare-> index},
-			indexVecBare = indexCD;
-			mapIndex = {indexVecBare -> -index} 
-	];
-	Return[vector/.mapIndex]
+	Return[normal[indexCD]*vector]
 ]; 
 
 
-ExtractBdyDerivative[bdyTerms_List, norm_, a_] := Module[{newIndex, bdytermsSimp, allbdy},
-	newIndex = a;
+ExtractBdyDerivative[bdyTerms_List, normal_, newIndex_] := Module[{bdytermsSimp, allbdy},
 	bdytermsSimp = PrepareBdyList[bdyTerms];
-	allbdy = Total[Map[ExtractSingleDerivative[#, newIndex]&, bdytermsSimp]];
-	Activate[allbdy]*norm[-newIndex]
+	allbdy = Total[Map[ExtractSingleDerivative[#, normal, newIndex]&, bdytermsSimp]];
+	Return[Activate[allbdy]];
 ];
 
-SetNormalVector[norm_, M_] := Module[{},BoundaryObjects = <|"normal"->norm, "index"->DummyIn[TangentM]|>;];
+ClearAll[IntegrateByParts, SetNormalVector];
 
-PertCanonicalDerivatives[xTensorTerms_] := Module[{termsAsLists, simpSingleList, term, allterms},
+SetNormalVector[norm_, M_] := <|"normal"->norm, "index"->DummyIn[TangentM]|>;
+
+IntegrateByParts[BoundaryObjects_][xTensorTerms_] := Module[
+	{termsAsLists, simpSingleList, term, allterms, terms},
 	terms = ScreenDollarIndices[FromSumToList[xTensorTerms]];
 	allterms = {};
-	Do[ AppendTo[allterms, IntByPartSingle[term]]
+	Do[
+		AppendTo[allterms, IntByPartSingle[term]]
 	,{term, terms}];
+	
 	Return[
 	<|
   	"bdy_term"  -> ExtractBdyDerivative[allterms[[All, "bdy_term"]], 
