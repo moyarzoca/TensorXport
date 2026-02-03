@@ -60,15 +60,17 @@ TensorToString[bundle_] := Module[
 		
 	pertStr = ToString[pertSymb/.beautyTensors];
 	
-	If[components==={},
-		Return[pertStr]
+	Which[
+	(components==={})&&(CDlayers===<||>),
+		Return[pertStr],
+	components=!={},
+		If[Head[First[components]]===LI,
+			indices = Rest[components],
+				indices = components
+		],
+	components==={},
+		indices = {}
 	];
-	
-	If[
-	Head[First[components]]===LI,
-		indices = Rest[components],
-			indices = components
-		];
 	
 	indicesStr = Map[ConvertIndexToString, indices];
 	
