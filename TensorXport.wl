@@ -263,17 +263,19 @@ ExtractNormalVector[BoundaryObjects_, index_][bdyTerm_] := ContractMetric[VarD[B
 
 ReplacePertAlone[termlist_List, auxh_] := Module[{PertPositions, target, clonelist},
 	PertPositions = Flatten[Position[termlist,hh[LI[1], a_,b_], 1]];
-  If[PertPositions === {},
-    Throw["Linear-Algebraic perturbation not found in term", termlist],
-      target = First[PertPositions]];
-   clonelist = termlist;
-   clonelist=ReplacePart[
-      clonelist,
-      target -> (termlist[[target]] /. (hh[LI[1], a_, b_] :> auxh[a, b]))
-    ];
-    Return[clonelist]
+	If[PertPositions === {},
+		Throw["Linear-Algebraic perturbation not found in term", termlist],
+			target = First[PertPositions]];
+	clonelist = termlist;
+	clonelist=ReplacePart[
+		clonelist,
+		target -> (termlist[[target]] /. (hh[LI[1], a_, b_] :> auxh[a, b]))
+		];
+	Return[clonelist]
   ];
- Clear[ConstructDifferentialOperator];
+
+Clear[ConstructDifferentialOperator];
+
 ExtractOperator[auxh_[a_,b_]][hDh_]:= Module[{alltermsFullList, finallist, FinalSum},
 	alltermsFullList = Map[FromTimesToList,FromSumToList[ScreenDollarIndices[hDh]]];
 	finallist = {};
