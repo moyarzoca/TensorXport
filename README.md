@@ -35,3 +35,19 @@ IntegrateByParts[boundyContext][expr]
 ```
 intbyparts[X_] := IntegrateByParts[boundyContext][X]
 ```
+### Usage of ExtractOperator
+Let `hDh` be a scalar quantity satisfying the following conditions.
+1. Each term is quadratic in the perturbation tensor `hh[LI[1], -a, -b]`.
+2. Each term contains at least one of the `hh` with no derivatives.
+Then, the function will allow you to extract the differential operator acting on of the `hh`. The procedure is the following:
+
+Define an auxiliary symmetric tensor
+```
+DefTensor[auxH[-a,-b],M , Symmetric[{-a,-b}]];
+```
+Then, one can use it to extract the operator as follows
+```
+ExtractOperator[auxH[-a,-b]][hDh]
+```
+This will return a tensor with symmetric indices [a, b].
+
